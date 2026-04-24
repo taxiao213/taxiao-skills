@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 时代的学习方式 - 他晓</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+  :root {
+    --blue-primary: #1976D2;
+    --blue-dark: #1565C0;
+    --blue-mid: #2196F3;
+    --blue-light: #64B5F6;
+    --blue-pale: #BBDEFB;
+    --blue-bg: #E3F2FD;
+    --blue-white: #F5F9FF;
+    --white: #FFFFFF;
+    --gray-50: #FAFBFC;
+    --gray-100: #F0F2F5;
+    --gray-200: #E4E7EB;
+    --gray-400: #9CA3AF;
+    --gray-600: #4B5563;
+    --gray-800: #1F2937;
+    --text-primary: #1A2332;
+    --text-secondary: #4A5568;
+    --text-muted: #718096;
+    --border: #E2E8F0;
+    --shadow-sm: 0 1px 3px rgba(25, 118, 210, 0.06);
+    --shadow-md: 0 4px 16px rgba(25, 118, 210, 0.08);
+    --shadow-lg: 0 8px 32px rgba(25, 118, 210, 0.1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--gray-50);
+    color: var(--text-primary);
+    line-height: 1.9;
+  }
+
+  .wrapper {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  .header {
+    text-align: center;
+    padding: 36px 0 28px;
+    background: var(--white);
+    border-radius: 0 0 16px 16px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 4px;
+  }
+
+  .header-deco {
+    width: 100%;
+    border-radius: 10px;
+    margin-bottom: 22px;
+  }
+
+  .brand-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .brand-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15);
+  }
+
+  .brand-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--blue-primary);
+    letter-spacing: 2px;
+  }
+
+  .header h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--text-primary);
+    line-height: 1.4;
+    margin-bottom: 10px;
+    padding: 0 8px;
+  }
+
+  .header h1 .accent {
+    color: var(--blue-primary);
+  }
+
+  .header-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    padding: 0 16px;
+  }
+
+  .content-area { padding: 0; }
+  .section { margin-bottom: 32px; }
+
+  .section-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    padding-left: 14px;
+    border-left: 3px solid var(--blue-primary);
+  }
+
+  .content-text {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 2;
+    margin-bottom: 14px;
+    text-align: justify;
+  }
+
+  .content-text strong {
+    color: var(--blue-dark);
+    font-weight: 600;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  .clean-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 16px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .clean-card .cc-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: var(--blue-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; margin-bottom: 12px;
+  }
+
+  .clean-card .cc-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px; font-weight: 600;
+    color: var(--text-primary); margin-bottom: 6px;
+  }
+
+  .clean-card .cc-desc {
+    font-size: 12px; color: var(--text-muted); line-height: 1.7;
+  }
+
+  .callout {
+    background: var(--blue-bg);
+    border-left: 4px solid var(--blue-primary);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 18px;
+    margin: 18px 0;
+  }
+
+  .callout .callout-label {
+    display: inline-block;
+    font-size: 11px; font-weight: 600;
+    color: var(--blue-primary);
+    background: var(--white);
+    padding: 2px 10px; border-radius: 8px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .callout p {
+    font-size: 14px; color: var(--text-secondary); line-height: 2;
+  }
+
+  .summary-box {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 22px;
+    margin: 28px 0;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+  }
+
+  .summary-box .summary-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px; font-weight: 700;
+    color: var(--text-primary); margin-bottom: 14px;
+  }
+
+  .summary-box .summary-text {
+    font-size: 14px; color: var(--text-secondary); line-height: 2;
+  }
+
+  .summary-box .summary-text strong { color: var(--blue-primary); }
+
+  @media (max-width: 480px) {
+    .header h1 { font-size: 22px; }
+    .card-grid { grid-template-columns: 1fr; }
+    .qr-pair { flex-direction: column !important; }
+    .qr-pair .qr-separator { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <!-- ===== ARTICLE HEADER ===== -->
+  <div class="header">
+    <img class="header-deco" src="assets/header_deco.png" alt="decoration" />
+    <div class="brand-row">
+      <img class="brand-avatar" src="assets/avatar.png" alt="他晓" />
+      <span class="brand-name">他晓</span>
+    </div>
+    <h1>AI 时代的<span class="accent">学习方式</span></h1>
+    <p class="header-subtitle">当 AI 成为学习伙伴，我们该如何重新定义知识的获取？</p>
+  </div>
+
+  <!-- ===== ARTICLE CONTENT ===== -->
+  <div class="content-area">
+
+    <div class="section">
+      <h2 class="section-title">学习的范式转移</h2>
+      <p class="content-text">在过去，学习意味着大量的阅读、记忆和重复练习。而今天，<strong>AI 工具正在重新定义学习的边界</strong>。从智能问答到代码辅助，从知识图谱到个性化推荐，AI 不再只是工具，而是成为了真正的学习伙伴。</p>
+      <p class="content-text">这种转变不仅仅是效率的提升，更是<strong>思维方式的重构</strong>。</p>
+
+      <div class="card-grid">
+        <div class="clean-card">
+          <div class="cc-icon">🧠</div>
+          <div class="cc-title">从记忆到理解</div>
+          <div class="cc-desc">AI 帮我们处理信息存储，让我们专注于深度理解</div>
+        </div>
+        <div class="clean-card">
+          <div class="cc-icon">🔄</div>
+          <div class="cc-title">从被动到主动</div>
+          <div class="cc-desc">通过对话式学习，从被动接收变为主动探索</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">实践中的关键发现</h2>
+      <p class="content-text">在实际使用 AI 辅助学习的过程中，我发现了一些值得分享的经验：</p>
+
+      <div class="callout">
+        <div class="callout-label">💡 核心观点</div>
+        <p>最好的学习方式不是让 AI 替你思考，而是让 AI 帮你<strong>拓展思考的边界</strong>。提出好问题，比得到好答案更重要。</p>
+      </div>
+
+      <p class="content-text">当你把 AI 当作一个知识渊博但需要引导的伙伴时，学习的效果会远超预期。关键在于<strong>提问的艺术</strong>和<strong>批判性思维</strong>的保持。</p>
+    </div>
+
+    <div class="section">
+      <div class="summary-box">
+        <div class="summary-title">✦ 写在最后</div>
+        <div class="summary-text">
+          AI 时代的学习，不是与机器竞争，而是<strong>与机器协作</strong>。<br/>
+          掌握 AI 工具的人，将拥有指数级的成长速度。<br/>
+          而这一切的起点，就是从今天开始尝试。
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== ARTICLE FOOTER ===== -->
+  <div class="footer" style="text-align:center; padding:20px 0 44px; background:var(--white); border-radius:16px 16px 0 0; box-shadow:0 -2px 12px rgba(0,0,0,0.04); margin-top:4px;">
+    <img src="assets/footer_deco.png" alt="decoration" style="width:100%; border-radius:6px; margin-bottom:24px; opacity:0.5;" />
+
+    <div class="qr-pair" style="display:flex; align-items:flex-start; justify-content:center; gap:0; margin-bottom:20px;">
+      <!-- 公众号二维码 -->
+      <div style="flex:1; max-width:220px; text-align:center; padding:0 8px;">
+        <div style="background:var(--white); border:1px solid var(--border); border-radius:14px; padding:16px 12px; box-shadow:var(--shadow-sm);">
+          <img src="assets/qrcode_gzh.jpg" alt="公众号二维码" style="width:120px; height:120px; border-radius:10px; margin-bottom:10px;" />
+          <div style="font-family:'Noto Serif SC',serif; font-size:14px; font-weight:600; color:var(--blue-primary); margin-bottom:4px;">公众号 · 他晓</div>
+          <div style="font-size:11px; color:var(--text-muted);">关注获取更多内容</div>
+        </div>
+      </div>
+
+      <div class="qr-separator" style="width:1px; height:160px; background:linear-gradient(to bottom, transparent, var(--blue-pale), transparent); margin:0 4px; flex-shrink:0;"></div>
+
+      <!-- 小程序二维码 -->
+      <div style="flex:1; max-width:220px; text-align:center; padding:0 8px;">
+        <div style="background:var(--white); border:1px solid var(--border); border-radius:14px; padding:16px 12px; box-shadow:var(--shadow-sm);">
+          <img src="assets/qrcode_xcx.jpg" alt="小程序二维码" style="width:120px; height:120px; border-radius:10px; margin-bottom:10px;" />
+          <div style="font-family:'Noto Serif SC',serif; font-size:14px; font-weight:600; color:var(--blue-primary); margin-bottom:4px;">小程序 · 人格派对</div>
+          <div style="font-size:11px; color:var(--text-muted);">开启你的探索之旅</div>
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size:12px; color:var(--text-muted); letter-spacing:0.5px;">长按识别二维码关注</p>
+    <p style="font-size:11px; color:var(--gray-400); margin-top:14px;">© 2025 他晓 · All Rights Reserved</p>
+  </div>
+
+</div>
+
+</body>
+</html>
