@@ -48,17 +48,22 @@
 
   .header {
     text-align: center;
-    padding: 36px 0 28px;
+    padding: 0 0 28px;
     background: var(--white);
     border-radius: 0 0 16px 16px;
     box-shadow: var(--shadow-sm);
     margin-bottom: 4px;
+    overflow: hidden;
   }
 
   .header-deco {
     width: 100%;
-    border-radius: 10px;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 0;
     margin-bottom: 22px;
+    display: block;
   }
 
   .brand-row {
@@ -223,7 +228,7 @@
 
   <!-- ===== ARTICLE HEADER ===== -->
   <div class="header">
-    <img class="header-deco" src="assets/header_deco.png" alt="decoration" />
+    <img class="header-deco" src="assets/header_deco.png" alt="header decoration" />
     <div class="brand-row">
       <img class="brand-avatar" src="assets/avatar.png" alt="他晓" />
       <span class="brand-name">他晓</span>
@@ -241,8 +246,8 @@
   </div>
 
   <!-- ===== ARTICLE FOOTER ===== -->
-  <div class="footer" style="text-align:center; padding:20px 0 44px; background:var(--white); border-radius:16px 16px 0 0; box-shadow:0 -2px 12px rgba(0,0,0,0.04); margin-top:4px;">
-    <img src="assets/footer_deco.png" alt="decoration" style="width:100%; border-radius:6px; margin-bottom:24px; opacity:0.5;" />
+  <div class="footer" style="text-align:center; padding:20px 0 44px; background:var(--white); border-radius:16px 16px 0 0; box-shadow:0 -2px 12px rgba(0,0,0,0.04); margin-top:4px; overflow:hidden;">
+    <img src="assets/footer_deco.png" alt="footer decoration" style="width:100%; max-width:100%; margin-left:0; margin-right:0; border-radius:0; margin-bottom:24px; opacity:0.5; display:block;" />
 
     <!-- 社群邀请 -->
     <div style="margin:0 auto 24px; max-width:480px; background:linear-gradient(135deg,#E3F2FD 0%,#F3E5F5 100%); border-radius:16px; padding:24px 20px; border:1px solid rgba(25,118,210,0.1); box-shadow:0 2px 12px rgba(25,118,210,0.06);">
@@ -252,9 +257,9 @@
       </div>
       <div style="background:#FFFFFF; border-radius:12px; padding:14px 16px; border:1px solid #E2E8F0; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
         <div style="font-size:13px; color:#4A5568; line-height:1.8; text-align:center;">
-          <span style="font-weight:600; color:#1976D2;">添加微信：</span>扫描下方二维码<br/>
-          <img src="assets/qrcode_wechat.png" alt="微信二维码" style="width:100px; height:100px; border-radius:10px; margin:8px auto; display:block;" />
-          <span style="display:inline-block; background:#E3F2FD; color:#1565C0; font-size:12px; font-weight:600; padding:2px 12px; border-radius:8px; margin-top:6px; letter-spacing:0.5px;">备注「他晓」邀请进群</span>
+          <div style="font-weight:600; color:#1976D2; margin-bottom:12px;">添加微信：扫描下方二维码</div>
+          <img src="assets/qrcode_wechat.png" alt="微信二维码" style="display:block; width:100px; height:100px; border-radius:10px; margin:0 auto 12px;" />
+          <span style="display:inline-block; background:#E3F2FD; color:#1565C0; font-size:12px; font-weight:600; padding:2px 12px; border-radius:8px; letter-spacing:0.5px;">备注「他晓」邀请进群</span>
         </div>
       </div>
     </div>
