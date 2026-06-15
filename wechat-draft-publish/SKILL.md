@@ -44,18 +44,49 @@ HTML 转 WeChat 内联样式（关键步骤！）
 
 ### 关键：为什么需要 HTML 转 WeChat 内联样式？
 
-微信公众号编辑器和 API **会直接剥离 `<style>` 标签中的所有 CSS**，只保留元素上的 `style=""` 内联属性。如果直接推送原始 HTML，所有样式都会丢失，文章变成纯文本。
+微信公众号 API 路径（`draft/add`）对 HTML 有**严格的三轮清洗**：
+1. 移除 `<script>`、`<style>`、`<iframe>` 等危险标签
+2. 过滤大部分 CSS 属性，只保留白名单内的 `style` 属性
+3. 移动端预览时进一步简化
 
-解决方案：使用 `html_to_wechat.py` 转换器，自动完成以下转换：
-- **解析 `<style>` 中的全部 CSS 规则**，将类选择器（如 `.section-title`）、组合选择器（如 `.tool-list .tool-name`）、标签选择器（如 `h1`）精确匹配到对应元素
-- **将 CSS 变量**（`var(--blue-primary)` 等）替换为实际颜色值
-- **跳过 `@media` 响应式规则**——微信公众号不支持响应式，避免移动端样式覆盖桌面端样式
-- **处理 `:last-child` 伪类**——如移除最后一个 `.tool-item` 的底部边框
-- **移除 `<style>`、`<head>`、`<body>` 等标签**，只保留 `<body>` 内的内容
-- **修复自闭合标签**——`img` 和 `br` 转为 WeChat 兼容格式
-- **保留 `align="left"` 等 HTML 属性**
+如果直接推送原始 HTML，所有样式都会丢失，文章变成纯文本。
 
-**技术实现**：转换器不再使用硬编码的 class→style 映射表，而是实时解析 HTML 中的 `<style>` 标签，构建 CSS 规则树，根据元素在 DOM 中的实际路径进行精确匹配。这确保了无论模板如何变化，转换结果始终与原始样式一致。
+#### 微信 API 路径支持的样式属性（基于2026年反向解析验证）
+
+| 类别 | 支持的属性 |
+|------|-----------|
+| 文字 | `color`, `font-size`, `font-weight`, `font-family`, `line-height`, `text-align`, `text-decoration`, `letter-spacing` |
+| 盒模型 | `margin`, `padding`, `background`, `background-color`, `width`, `height` |
+| 边框 | `border`, `border-left`, `border-radius` |
+| **不支持的属性** | `display: flex/grid`, `box-shadow`, `grid-template-columns`, `position`, `float` 等 |
+
+#### 转换器核心策略（v5 table布局版）
+
+`html_to_wechat.py` 转换器自动完成以下转换：
+
+**CSS 解析与匹配：**
+- 解析 `<style>` 中的全部 CSS 规则，精确匹配到对应元素
+- 将 CSS 变量（`var(--blue-primary)` 等）替换为实际颜色值
+- 跳过 `@media` 响应式规则
+
+**标签转换：**
+- 使用 `<section>` 代替 `<div>`——微信编辑器原生使用 `<section>` 作为容器
+- 移除 `<style>`、`<head>`、`<body>` 等标签
+- 修复自闭合标签（`<br />`、`<img ... />`）
+
+**布局转换（核心改进）：**
+- **`grid` 布局 → `<table>`**：`card-grid`、`stat-grid` 等网格容器转换为 `<table>`，子元素转换为 `<td>`，自动计算列宽（`width:50%` 或 `width:33%`）
+- **`flex` 行布局 → `<table><tr>`**：`tool-item`、`brand-row`、`qr-pair` 等弹性行容器转换为 `<table><tr>`，子元素转换为 `<td>`
+- 3列 grid 自动在每3个 `<td>` 后插入 `</tr><tr>` 换行
+
+**样式过滤：**
+- 移除微信 API 路径不支持的属性：`display: flex/grid`、`box-shadow`、`grid-template-columns`、`gap`、`flex-*`、`align-items`、`justify-content` 等
+- 只保留白名单属性：`color`、`font-size`、`margin`、`padding`、`background`、`border`、`border-radius`、`width`、`text-align` 等
+
+**为什么用 `<table>` 而不是图片？**
+- `<table>` 在微信中完全支持，文字可选中、可搜索
+- 图片方案虽然更精确，但文字不可选中、不可复制、加载更慢
+- `<table>` 方案在排版精度和可用性之间取得了最佳平衡
 
 ## 使用方式
 
@@ -129,13 +160,82 @@ python3 update_draft.py --html "推文.html" --dry-run
 python3 update_draft.py --html "推文.html" --gen-map
 ```
 
+## 推荐方案：浏览器复制粘贴（排版保真度最高）
+
+微信 API 路径（`draft/add`）对 HTML 有严格的三轮清洗，会过滤大量 CSS 属性。而通过**浏览器渲染后复制粘贴**到微信后台，排版保真度远高于 API 推送——这就是 135 编辑器的核心原理。
+
+### 操作流程（两步转换）
+
+**重要**：不能直接渲染原始 HTML 复制！微信编辑器粘贴时**也会剥离 `<style>` 标签**，必须先将 CSS 转为内联样式。
+
+```
+Step 1: html_to_copy.py  — CSS 转内联样式（保留全部 CSS 属性）
+Step 2: generate_copy_version.py  — 图片嵌入 base64 + 包裹完整 HTML
+Step 3: 浏览器打开 → Ctrl+A 全选 → Ctrl+C 复制 → 微信后台 Ctrl+V 粘贴
+```
+
+### Step 1：CSS 转内联样式
+
+```bash
+python3 /sessions/69e9523781c4767c3eaa9c12/workspace/.trae/skills/wechat-draft-publish/html_to_copy.py \
+  "推文.html" -o "推文_内联版.html"
+```
+
+`html_to_copy.py` 与 `html_to_wechat.py`（API版）的关键区别：
+
+| 维度 | html_to_copy.py（复制粘贴版） | html_to_wechat.py（API版） |
+|------|---------------------------|--------------------------|
+| CSS 属性保留 | **保留全部**（flex, grid, box-shadow 等） | 严格过滤，只保留白名单 |
+| 布局转换 | 不转换（保留 flex/grid） | grid→table, flex→table |
+| div 处理 | 转为 `<section>` | 转为 `<section>` |
+| CSS 变量 | 解析为实际值 | 解析为实际值 |
+| 伪类支持 | 支持 `:last-child`, `:first-child`, `:nth-child()` | 不支持（建议用 class 替代） |
+
+### Step 2：图片嵌入 base64
+
+```bash
+python3 /sessions/69e9523781c4767c3eaa9c12/workspace/.trae/skills/wechat-draft-publish/generate_copy_version.py \
+  --html "推文_内联版.html" \
+  --output "推文_复制粘贴版.html"
+```
+
+该脚本会：
+- 将所有图片压缩到 1200px 宽度（节省体积）
+- 转为 JPEG 格式（质量 85%）
+- 内嵌为 base64 编码（无需外部图片依赖）
+- **自动包裹完整 HTML 结构**（含 `<meta charset="utf-8">`，确保中文正确显示）
+- 输出独立 HTML 文件，可直接在浏览器中打开
+
+### 为什么复制粘贴比 API 推送效果好？
+
+| 维度 | API 推送（draft/add） | 浏览器复制粘贴 |
+|------|---------------------|---------------|
+| CSS 属性保留 | 严格过滤，只保留白名单 | 大部分保留（利用富文本剪贴板） |
+| `<section>` 标签 | 保留 | 保留 |
+| `<div>` 标签 | 可能被转为 `<p>` | 保留 |
+| `display: flex/grid` | 被过滤 | **保留** |
+| `box-shadow` | 被过滤 | **保留** |
+| `border-radius` | 部分保留 | **保留** |
+| 图片 | 必须是微信 CDN URL | base64 或本地图片均可 |
+| 自动化程度 | 全自动 | 需手动复制粘贴 |
+
+### HTML 模板编写注意事项
+
+为确保复制粘贴后排版正确，编写 HTML 模板时需注意：
+
+1. **避免依赖 `:last-child` 等伪类**：`html_to_copy.py` 虽然支持伪类匹配，但更可靠的方式是给最后一个元素添加特殊 class（如 `tool-item-last`），同时保留 `:last-child` 选择器作为兼容
+2. **层级间距用显式分隔 div**：对于列表类布局（如 tool-list），建议在层级之间插入 `<div style="height:16px;"></div>` 作为间距，比依赖 `margin-bottom` 更可靠
+3. **`<style>` 标签中的 CSS 会被剥离**：所有样式必须能通过 CSS 选择器匹配到元素，转换器会自动内联化
+
 ## 脚本清单
 
 | 脚本 | 用途 |
 |------|------|
-| `publish_to_draft.py` | 首次发布：上传图片 + 转换样式 + 推送草稿 |
+| `publish_to_draft.py` | API 推送：上传图片 + 转换样式 + 推送草稿 |
 | `update_draft.py` | 样式更新：仅转换样式 + 推送草稿（复用已有图片URL） |
-| `html_to_wechat.py` | HTML 转 WeChat 内联样式（被上述两个脚本自动调用） |
+| `html_to_wechat.py` | HTML 转 WeChat 内联样式 — API 版（过滤不支持的 CSS，grid/flex→table） |
+| `html_to_copy.py` | HTML 转 WeChat 内联样式 — 复制粘贴版（保留全部 CSS，用于浏览器复制流程） |
+| `generate_copy_version.py` | 图片嵌入 base64 + 包裹完整 HTML（复制粘贴流程的第二步） |
 
 ## 关键 API 接口
 
