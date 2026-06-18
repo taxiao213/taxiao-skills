@@ -219,6 +219,8 @@ python3 /sessions/69e9523781c4767c3eaa9c12/workspace/.trae/skills/wechat-draft-p
 | 图片 | 必须是微信 CDN URL | base64 或本地图片均可 |
 | 自动化程度 | 全自动 | 需手动复制粘贴 |
 
+**重要提醒**：复制粘贴路径虽然保留更多 CSS，但微信编辑器仍会剥离外层容器的 `padding`（如 `.wrapper` 上的左右边距）。因此边距必须直接写在每个正文元素上，参见上方"HTML 模板编写注意事项"第4条。
+
 ### HTML 模板编写注意事项
 
 为确保复制粘贴后排版正确，编写 HTML 模板时需注意：
@@ -226,6 +228,11 @@ python3 /sessions/69e9523781c4767c3eaa9c12/workspace/.trae/skills/wechat-draft-p
 1. **避免依赖 `:last-child` 等伪类**：`html_to_copy.py` 虽然支持伪类匹配，但更可靠的方式是给最后一个元素添加特殊 class（如 `tool-item-last`），同时保留 `:last-child` 选择器作为兼容
 2. **层级间距用显式分隔 div**：对于列表类布局（如 tool-list），建议在层级之间插入 `<div style="height:16px;"></div>` 作为间距，比依赖 `margin-bottom` 更可靠
 3. **`<style>` 标签中的 CSS 会被剥离**：所有样式必须能通过 CSS 选择器匹配到元素，转换器会自动内联化
+4. **边距必须写在元素自身上**：外层容器的 `padding`（如 `.wrapper { padding: 0 32px; }`）在微信编辑器粘贴时可能被剥离。务必将边距直接写在正文元素上：
+   - 正文段落 `.content-text`：`padding: 0 16px`
+   - 小节标题 `.section-title`：`padding-left: 30px`（配合 `border-left` 使用）
+   - 引用框/卡片 `.callout`、`.tool-list`、`.summary-box`、`.quote-box`：`margin: 16px 16px` 或 `padding: 20px 18px 20px 34px`
+   - 图片 `.img-placeholder`：保持 `width: 100%; margin: 16px 0;`，不额外加左右 margin，让图片自然撑满容器
 
 ## 脚本清单
 
