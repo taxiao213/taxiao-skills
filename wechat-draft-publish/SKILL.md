@@ -233,6 +233,12 @@ python3 /sessions/69e9523781c4767c3eaa9c12/workspace/.trae/skills/wechat-draft-p
    - 小节标题 `.section-title`：`padding-left: 30px`（配合 `border-left` 使用）
    - 引用框/卡片 `.callout`、`.tool-list`、`.summary-box`、`.quote-box`：`margin: 16px 16px` 或 `padding: 20px 18px 20px 34px`
    - 图片 `.img-placeholder`：保持 `width: 100%; margin: 16px 0;`，不额外加左右 margin，让图片自然撑满容器
+5. **禁止使用 CSS 伪元素（`::before`、`::after`）**：`html_to_copy.py` 会将伪元素的样式（如 `content:''`、`position:absolute`）错误地转换成浮动的 `<section>` 标签，导致页面出现乱码或布局错乱。所有视觉效果必须用实际 HTML 元素实现：
+   - ❌ 错误：`.timeline-item::before { content:''; position:absolute; ... }` 用伪元素画圆点/线条
+   - ✅ 正确：用 flex 布局 + 实际 `<div>` 元素作为圆点（`border-radius:50%`）和连接线（`width:2px; flex:1`）
+   - ❌ 错误：用 `::before` 画装饰性边框、箭头、图标等
+   - ✅ 正确：用实际的 `<span>`、`<div>` 或 Unicode 字符（如 ▶、●、→）替代
+6. **AI 生成图片必须去除水印**：使用 `GenerateImage` 工具生成的图片默认带有 "TRAE AI 生成" 水印，发布前必须用 Pillow 脚本去除。水印位于图片右下角，可通过裁剪或覆盖方式移除。建议在 `generate_copy_version.py` 中集成水印去除逻辑，或在图片生成后单独处理
 
 ## 脚本清单
 
