@@ -240,6 +240,48 @@ python3 /sessions/69e9523781c4767c3eaa9c12/workspace/.trae/skills/wechat-draft-p
    - ✅ 正确：用实际的 `<span>`、`<div>` 或 Unicode 字符（如 ▶、●、→）替代
 6. **AI 生成图片必须去除水印**：使用 `GenerateImage` 工具生成的图片默认带有 "TRAE AI 生成" 水印，发布前必须用 Pillow 脚本去除。水印位于图片右下角，可通过裁剪或覆盖方式移除。建议在 `generate_copy_version.py` 中集成水印去除逻辑，或在图片生成后单独处理
 
+## 封面图规范
+
+每篇推文必须生成一张微信公众号封面图，用于推送链接的缩略图展示。
+
+### 基本规格
+
+| 属性 | 规范 |
+|------|------|
+| **尺寸** | 固定 **900 x 383 像素**（2.35:1 比例） |
+| **文件格式** | PNG |
+| **文件名** | `cover.png` |
+| **存放路径** | `{文章主题}_公众号推文_assets/cover.png` |
+| **用途** | 仅用于微信公众号推送链接的缩略图（通过 `thumb_media_id` 上传），**不嵌入正文 HTML** |
+
+### 生成方式
+
+**必须使用 Pillow 脚本生成**，禁止使用 `GenerateImage` AI 生成（有水印且风格不统一）：
+
+```bash
+python3 /sessions/69e9523781c4767c3eaa9c12/workspace/taxiao-wechat-v3/assets/generate_cover.py \
+  --title "文章主标题" \
+  --subtitle "文章副标题" \
+  --tags "关键词1 · 关键词2 · 关键词3" \
+  --output "{文章主题}_公众号推文_assets/cover.png" \
+  --theme blue
+```
+
+### 主题配色
+
+| 主题 | 适用场景 | 主色 |
+|------|----------|------|
+| `blue` | AI/技术/开发类（默认） | 科技蓝 `#1976D2` |
+| `orange` | 产品/创业/增长类 | 活力橙 `#F26522` |
+| `purple` | 深度分析/行业报告类 | 深空紫 `#6A1B9A` |
+| `green` | 生态/开源/教育类 | 清新绿 `#2E7D32` |
+
+### 禁止事项
+
+- 禁止在正文 HTML 中放置封面图（`<img src="cover.png">`）
+- 禁止使用 `GenerateImage` 生成封面图
+- 禁止使用 AI 生成的图片作为封面
+
 ## 脚本清单
 
 | 脚本 | 用途 |
