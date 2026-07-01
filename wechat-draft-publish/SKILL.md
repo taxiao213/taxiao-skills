@@ -200,11 +200,14 @@ python3 /sessions/69e9523781c4767c3eaa9c12/workspace/.trae/skills/wechat-draft-p
 ```
 
 该脚本会：
+- **自动去除 AI 水印**（裁剪图片底部35像素，去除右下角"AI生成"水印）
 - 将所有图片压缩到 1200px 宽度（节省体积）
 - 转为 JPEG 格式（质量 85%）
 - 内嵌为 base64 编码（无需外部图片依赖）
 - **自动包裹完整 HTML 结构**（含 `<meta charset="utf-8">`，确保中文正确显示）
 - 输出独立 HTML 文件，可直接在浏览器中打开
+
+> **提示**：如需禁用自动去水印，可添加 `--no-watermark-removal` 参数。
 
 ### 为什么复制粘贴比 API 推送效果好？
 
@@ -238,7 +241,21 @@ python3 /sessions/69e9523781c4767c3eaa9c12/workspace/.trae/skills/wechat-draft-p
    - ✅ 正确：用 flex 布局 + 实际 `<div>` 元素作为圆点（`border-radius:50%`）和连接线（`width:2px; flex:1`）
    - ❌ 错误：用 `::before` 画装饰性边框、箭头、图标等
    - ✅ 正确：用实际的 `<span>`、`<div>` 或 Unicode 字符（如 ▶、●、→）替代
-6. **AI 生成图片必须去除水印**：使用 `GenerateImage` 工具生成的图片默认带有 "TRAE AI 生成" 水印，发布前必须用 Pillow 脚本去除。水印位于图片右下角，可通过裁剪或覆盖方式移除。建议在 `generate_copy_version.py` 中集成水印去除逻辑，或在图片生成后单独处理
+6. **AI 生成图片必须去除水印**：使用 `GenerateImage` 工具生成的图片默认带有 "AI生成" 水印，发布前**必须**去除。水印位于图片右下角，可通过裁剪方式移除。
+
+   **自动去水印（推荐）**：`generate_copy_version.py` 已集成自动水印去除功能，处理图片时会自动裁剪底部35像素区域。无需手动操作。
+
+   **手动去水印（备用）**：如需要单独处理图片，可使用以下 Pillow 脚本：
+   ```python
+   from PIL import Image
+   img = Image.open("image.jpg")
+   w, h = img.size
+   # 裁剪掉底部35像素（去除右下角水印）
+   cropped = img.crop((0, 0, w, h - 35))
+   cropped.save("image.jpg", quality=95)
+   ```
+
+   **重要**：所有 AI 生成的正文配图在嵌入 HTML 前必须完成去水印，否则会影响文章专业度。
 
 ## 封面图规范
 

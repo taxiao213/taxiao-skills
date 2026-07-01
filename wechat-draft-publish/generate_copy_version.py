@@ -17,8 +17,17 @@ import argparse
 from PIL import Image
 
 
-def embed_images(html_content: str, base_dir: str, max_width: int = 1200, quality: int = 85) -> str:
-    """将 HTML 中的所有本地图片转为 base64 内嵌"""
+def remove_watermark(img: Image.Image) -> Image.Image:
+    """去除图片右下角的 AI 水印（裁剪底部35像素）"""
+    w, h = img.size
+    # 水印位于右下角，高度约30-40像素，裁剪底部35像素可安全去除
+    if h > 100:
+        return img.crop((0, 0, w, h - 35))
+    return img
+
+
+def embed_images(html_content: str, base_dir: str, max_width: int = 1200, quality: int = 85, remove_wm: bool = True) -> str:
+    """将 HTML 中的所有本地图片转为 base64 内嵌（自动去除 AI 水印）"""
     count = 0
 
     def replace_img(match):
@@ -37,6 +46,10 @@ def embed_images(html_content: str, base_dir: str, max_width: int = 1200, qualit
 
         try:
             img = Image.open(full_path)
+
+            # 去除 AI 水印（裁剪底部35像素）
+            if remove_wm:
+                img = remove_watermark(img)
 
             # 转为 RGB
             if img.mode == 'RGBA':
@@ -57,7 +70,8 @@ def embed_images(html_content: str, base_dir: str, max_width: int = 1200, qualit
             b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
 
             count += 1
-            print(f'  [{count}] 嵌入: {src} ({len(b64)} chars)')
+            wm_status = "[已去水印] " if remove_wm else ""
+            print(f'  [{count}] {wm_status}嵌入: {src} ({len(b64)} chars)')
             return tag.replace(f'src="{src}"', f'src="data:image/jpeg;base64,{b64}"')
 
         except Exception as e:
@@ -74,6 +88,7 @@ def main():
     parser.add_argument('--output', default=None, help='输出文件路径（默认：原文件名_复制版.html）')
     parser.add_argument('--max-width', type=int, default=1200, help='图片最大宽度（默认1200px）')
     parser.add_argument('--quality', type=int, default=85, help='JPEG 质量（默认85）')
+    parser.add_argument('--no-watermark-removal', action='store_true', help='禁用自动去水印（默认启用）')
     args = parser.parse_args()
 
     if not args.output:
@@ -87,7 +102,10 @@ def main():
         html = f.read()
 
     print(f'处理图片中...')
-    html = embed_images(html, base_dir, args.max_width, args.quality)
+    remove_wm = not args.no_watermark_removal
+    if remove_wm:
+        print('  自动去水印：已启用（裁剪底部35像素）')
+    html = embed_images(html, base_dir, args.max_width, args.quality, remove_wm)
 
     # 包裹完整 HTML 结构（确保浏览器正确识别 UTF-8 编码）
     full_html = f"""<!DOCTYPE html>
