@@ -26,6 +26,16 @@ def remove_watermark(img: Image.Image) -> Image.Image:
     return img
 
 
+def is_asset_image(src: str) -> bool:
+    """判断是否为公共素材文件（不需要去水印）"""
+    basename = os.path.basename(src).lower()
+    asset_names = [
+        'qrcode', 'avatar', 'header_deco', 'footer_deco',
+        'cover.png',
+    ]
+    return any(basename.startswith(name) or basename == name for name in asset_names)
+
+
 def embed_images(html_content: str, base_dir: str, max_width: int = 1200, quality: int = 85, remove_wm: bool = True) -> str:
     """将 HTML 中的所有本地图片转为 base64 内嵌（自动去除 AI 水印）"""
     count = 0
@@ -47,8 +57,9 @@ def embed_images(html_content: str, base_dir: str, max_width: int = 1200, qualit
         try:
             img = Image.open(full_path)
 
-            # 去除 AI 水印（裁剪底部35像素）
-            if remove_wm:
+            # 去除 AI 水印（裁剪底部35像素），仅对 AI 生成的配图生效
+            should_remove_wm = remove_wm and not is_asset_image(src)
+            if should_remove_wm:
                 img = remove_watermark(img)
 
             # 转为 RGB
@@ -70,7 +81,12 @@ def embed_images(html_content: str, base_dir: str, max_width: int = 1200, qualit
             b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
 
             count += 1
-            wm_status = "[已去水印] " if remove_wm else ""
+            if should_remove_wm:
+                wm_status = "[已去水印] "
+            elif is_asset_image(src):
+                wm_status = "[素材跳过] "
+            else:
+                wm_status = ""
             print(f'  [{count}] {wm_status}嵌入: {src} ({len(b64)} chars)')
             return tag.replace(f'src="{src}"', f'src="data:image/jpeg;base64,{b64}"')
 
