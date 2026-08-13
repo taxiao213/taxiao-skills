@@ -18,11 +18,11 @@ from PIL import Image
 
 
 def remove_watermark(img: Image.Image) -> Image.Image:
-    """去除图片右下角的 AI 水印（裁剪底部35像素）"""
+    """去除图片右下角的 AI 水印（裁剪底部120像素）"""
     w, h = img.size
-    # 水印位于右下角，高度约30-40像素，裁剪底部35像素可安全去除
-    if h > 100:
-        return img.crop((0, 0, w, h - 35))
+    # 水印位于右下角，有大小两种半透明水印，裁剪底部120像素可安全去除
+    if h > 200:
+        return img.crop((0, 0, w, h - 120))
     return img
 
 
@@ -57,7 +57,7 @@ def embed_images(html_content: str, base_dir: str, max_width: int = 1200, qualit
         try:
             img = Image.open(full_path)
 
-            # 去除 AI 水印（裁剪底部35像素），仅对 AI 生成的配图生效
+            # 去除 AI 水印（裁剪底部120像素），仅对 AI 生成的配图生效
             should_remove_wm = remove_wm and not is_asset_image(src)
             if should_remove_wm:
                 img = remove_watermark(img)
@@ -120,7 +120,7 @@ def main():
     print(f'处理图片中...')
     remove_wm = not args.no_watermark_removal
     if remove_wm:
-        print('  自动去水印：已启用（裁剪底部35像素）')
+        print('  自动去水印：已启用（裁剪底部120像素）')
     html = embed_images(html, base_dir, args.max_width, args.quality, remove_wm)
 
     # 包裹完整 HTML 结构（确保浏览器正确识别 UTF-8 编码）
