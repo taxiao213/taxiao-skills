@@ -82,6 +82,10 @@ V3 版本是从已发布的文章（AI订阅套餐全景扫描、Demo Day 会议
 - **居中元素用 `style="text-align:center"`**（header、footer、分隔线等）
 - **不使用 `display:flex` / `display:grid`**（微信支持不稳定）
 - **布局用 `<table>` 替代 flex/grid**（如双二维码并排）
+- **标题只用 `<h2>`**，禁止使用 `<h3>`/`<h4>`/`<h5>`（微信对 h3+ 支持不稳定，会导致格式错乱）
+- **表格禁止 `border-radius` 和 `overflow:hidden`**（微信对 table 上的这些属性支持不稳定）
+- **表格允许的样式属性**：`width`、`border-collapse`、`border`、`margin`、`padding`、`font-size`、`text-align`、`vertical-align`
+- **`border-radius` 和 `overflow:hidden` 只能用在 `<div>` 上**（微信对 div 上的这些属性支持良好）
 
 ### 2.2 配色方案
 
@@ -203,11 +207,98 @@ Read assets/template.html
 4. 所有内容 `<div>` 必须加 `align="left"`
 5. 不使用 `<style>` 标签
 6. 不使用 `display:flex` / `display:grid`
+7. **所有标题只用 `<h2>`**（包括子标题），通过 `font-size` 区分层级，禁止 `<h3>`/`<h4>`
+8. **`<table>` 上禁止 `border-radius` 和 `overflow:hidden`**，只能用 `border-collapse`、`border`、`margin`、`padding`、`width` 等
 
-### 3.3 输出
+### 3.3 输出与发布流程（重要：必须严格按此流程）
+
+#### 3.3.1 源文件
 - 文件名格式：`{文章主题}_公众号推文.html`
-- 同时将 `assets/` 复制到输出目录的 `assets/` 子文件夹
-- 图片路径使用相对路径：`{文件名}_assets/xxx.png`
+- 同时将 `assets/` 复制到输出目录的 `{文章主题}_公众号推文_assets/` 子文件夹
+- 图片路径使用相对路径：`{文章主题}_公众号推文_assets/xxx.png`
+- 源文件使用 `<div>` 标签和完整 HTML 结构（`<!DOCTYPE>`、`<html>`、`<head>`、`<body>`）
+
+#### 3.3.2 生成复制粘贴版（两步流程，缺一不可）
+
+**为什么需要两步？**
+- 微信编辑器原生使用 `<section>` 标签，`<div>` 标签粘贴后样式可能丢失
+- 微信会过滤 `<style>` 标签和 CSS class，需要全部转为内联样式
+- 微信不支持外部图片引用，需要将所有图片转为 base64 内嵌
+- 直接在源文件上嵌入 base64 会导致文件过大、难以维护
+
+**Step 1：html_to_copy.py — 结构转换**
+
+将源 HTML 转换为微信兼容的 `<section>` 结构：
+
+```bash
+python3 .trae/skills/wechat-draft-publish/html_to_copy.py \
+  "{文章主题}_公众号推文.html" \
+  -o "{文章主题}_公众号推文_转换版.html"
+```
+
+此脚本执行以下操作：
+1. `<div>` → `<section>`（微信编辑器原生标签）
+2. `<style>` 中的 CSS class 转为内联 `style` 属性
+3. 解析 CSS 变量 `var(--xxx)` 为实际值
+4. 移除 `<!DOCTYPE>`、`<html>`、`<head>`、`<body>` 等无关标签
+5. 输出纯净的 HTML 片段（无外层文档结构）
+
+**Step 2：generate_copy_version.py — 图片内嵌**
+
+将转换后的 HTML 中的所有本地图片转为 base64 内嵌：
+
+```bash
+python3 .trae/skills/wechat-draft-publish/generate_copy_version.py \
+  --html "{文章主题}_公众号推文_转换版.html" \
+  --output "{文章主题}_公众号推文_复制粘贴版.html"
+```
+
+此脚本执行以下操作：
+1. 所有本地图片转为 base64 内嵌（自动去 AI 水印）
+2. 素材图片（avatar、qrcode、header_deco 等）跳过去水印
+3. 包裹单一 HTML 文档结构（`<!DOCTYPE>` + `<html>` + `<body>`）
+4. 输出自包含的 HTML 文件，浏览器打开即可全选复制
+
+**Step 3：清理中间文件**
+
+删除 Step 1 生成的转换版文件：
+```bash
+rm "{文章主题}_公众号推文_转换版.html"
+```
+
+#### 3.3.3 最终交付文件
+
+| 文件 | 用途 |
+|------|------|
+| `{文章主题}_公众号推文.html` | 源文件（用于编辑维护） |
+| `{文章主题}_公众号推文_复制粘贴版.html` | 浏览器打开 → 全选复制 → 粘贴到微信公众号 |
+| `{文章主题}_公众号推文_assets/` | 图片资源目录 |
+| `{文章主题}_公众号推文_assets/cover.png` | 微信封面缩略图（单独上传） |
+
+#### 3.3.4 验证清单
+
+生成复制粘贴版后，必须验证以下内容：
+
+```
+✅ 使用 <section> 标签（非 <div>）
+✅ 无 <!DOCTYPE> 双重嵌套（只能有 1 个）
+✅ 无 <style> 标签、无 CSS class
+✅ 无 display:flex / display:grid
+✅ 无 <h3> / <h4> / <h5>（只用 <h2>）
+✅ <table> 上无 border-radius / overflow:hidden
+✅ 所有图片为 base64 内嵌（src="data:image/..."）
+✅ 无外部图片引用（src="assets/..." 或 src="http..."）
+```
+
+#### 3.3.5 常见错误
+
+| 错误 | 原因 | 解决 |
+|------|------|------|
+| 粘贴后格式错乱 | 跳过 Step 1，`<div>` 未转为 `<section>` | 必须先运行 html_to_copy.py |
+| 双重 HTML 结构 | Step 2 直接作用于源文件（含完整 HTML 文档） | 必须先运行 Step 1 去除 HTML 外层 |
+| 图片无法显示 | 图片未内嵌为 base64 | 必须运行 Step 2 的 generate_copy_version.py |
+| 标题样式丢失 | 使用了 `<h3>` 等非 `<h2>` 标签 | 所有标题统一用 `<h2>`，通过 font-size 区分层级 |
+| 表格圆角消失 | `<table>` 上使用了 `border-radius` | 表格禁用 border-radius，改用 `<div>` 包裹实现圆角 |
 
 ### 3.4 封面图（重要：必须严格按此流程）
 
@@ -251,6 +342,8 @@ python3 taxiao-wechat-v3/assets/generate_cover.py \
 
 ## 四、资源文件
 
+### 4.1 本技能资源（taxiao-wechat-v3/assets/）
+
 | 文件 | 用途 |
 |------|------|
 | `avatar.png` | 公众号头像 |
@@ -261,3 +354,12 @@ python3 taxiao-wechat-v3/assets/generate_cover.py \
 | `footer_deco.png` | 结尾装饰图 |
 | `generate_cover.py` | 封面图生成脚本（Pillow，见 3.4 节） |
 | `template.html` | 完整 HTML 模板（全内联样式） |
+
+### 4.2 外部依赖脚本（wechat-draft-publish/）
+
+| 文件 | 用途 |
+|------|------|
+| `html_to_copy.py` | Step 1：`<div>`→`<section>` 转换、CSS 内联化、去除 HTML 外层结构（见 3.3.2 节） |
+| `generate_copy_version.py` | Step 2：图片 base64 内嵌、自动去水印、包裹单一 HTML 文档（见 3.3.2 节） |
+
+**脚本路径**：`.trae/skills/wechat-draft-publish/`
