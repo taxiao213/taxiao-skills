@@ -84,13 +84,25 @@ def find_font():
         "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
         "/usr/share/fonts/truetype/noto/NotoSansSC-Regular.otf",
         "/usr/share/fonts/truetype/noto/NotoSansSC-Regular.ttf",
+        "/System/Library/Fonts/Hiragino Sans GB.ttc",
+        "/System/Library/Fonts/PingFang.ttc",
+        "/Library/Fonts/Arial Unicode.ttf",
     ]
     for fp in candidates:
         if os.path.exists(fp):
             return fp
 
-    # 兜底搜索
-    import subprocess
+    # macOS fallback search
+    if sys.platform == "darwin":
+        result = subprocess.run(
+            ["find", "/System/Library/Fonts", "/Library/Fonts", "-name", "*PingFang*", "-o", "-name", "*Hiragino*", "-o", "-name", "*NotoSans*SC*"],
+            capture_output=True, text=True
+        )
+        lines = result.stdout.strip().split("\n")
+        if lines and lines[0]:
+            return lines[0]
+
+    # Linux fallback search
     result = subprocess.run(
         ["find", "/usr/share/fonts", "-name", "*Noto*CJK*", "-o", "-name", "*NotoSans*SC*"],
         capture_output=True, text=True

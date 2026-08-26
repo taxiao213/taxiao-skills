@@ -153,6 +153,15 @@ V3 版本是从已发布的文章（AI订阅套餐全景扫描、Demo Day 会议
 <div style="text-align:center; margin:28px 0; color:#BBDEFB; font-size:18px; letter-spacing:8px;">&bull; &bull; &bull;</div>
 ```
 
+**头像+文字并排（居中，禁止 flex/table，用 vertical-align 内联实现）**：
+```html
+<div style="text-align:center; margin-bottom:18px;">
+  <img src="{文章主题}_公众号推文_assets/avatar.png" alt="他晓" style="width:40px; height:40px; border-radius:10px; box-shadow:0 2px 8px rgba(25,118,210,0.15); vertical-align:middle; margin-right:10px;" />
+  <span style="font-family:Georgia,'Noto Serif SC',serif; font-size:17px; font-weight:700; color:#1976D2; letter-spacing:2px; vertical-align:middle;">他晓</span>
+</div>
+```
+> ⚠️ 此组件禁止用 `display:flex`（微信不支持），也禁止用 `<table>` 布局（微信会显示表格结构）。只能用 `vertical-align:middle` 内联方式实现图文垂直居中。
+
 **内容段落容器**：
 ```html
 <div style="margin-bottom:32px;" align="left">
@@ -217,6 +226,19 @@ Read assets/template.html
 - 同时将 `assets/` 复制到输出目录的 `{文章主题}_公众号推文_assets/` 子文件夹
 - 图片路径使用相对路径：`{文章主题}_公众号推文_assets/xxx.png`
 - 源文件使用 `<div>` 标签和完整 HTML 结构（`<!DOCTYPE>`、`<html>`、`<head>`、`<body>`）
+
+**素材文件检查清单（复制后必须逐项核对，缺一不可）**：
+| 文件 | 用途 | 必需 |
+|------|------|------|
+| `avatar.png` | 开头公众号头像 | ✅ |
+| `header_deco.png` | 开头装饰图 | ✅ |
+| `footer_deco.png` | 结尾装饰图 | ✅ |
+| `qrcode_gzh.jpg` | 结尾公众号二维码 | ✅ |
+| `qrcode_xcx.jpg` | 结尾小程序二维码 | ✅ |
+| `qrcode_wechat.png` | 结尾社群微信二维码 | ✅ |
+| `cover.png` | 微信封面缩略图（generate_cover.py 生成） | ✅ |
+
+> ⚠️ 复制完成后执行 `ls {文章主题}_公众号推文_assets/` 核对 7 个文件齐全，再进入下一步。漏复制文件会导致图片在微信中无法显示。
 
 #### 3.3.2 生成复制粘贴版（两步流程，缺一不可）
 
@@ -286,8 +308,10 @@ rm "{文章主题}_公众号推文_转换版.html"
 ✅ 无 display:flex / display:grid
 ✅ 无 <h3> / <h4> / <h5>（只用 <h2>）
 ✅ <table> 上无 border-radius / overflow:hidden
+✅ 开头头像+文字用 vertical-align 内联（非 table/flex 布局）
 ✅ 所有图片为 base64 内嵌（src="data:image/..."）
 ✅ 无外部图片引用（src="assets/..." 或 src="http..."）
+✅ base64 图片数量与素材目录文件数一致（7 个素材 + 正文配图）
 ```
 
 #### 3.3.5 常见错误
@@ -299,6 +323,8 @@ rm "{文章主题}_公众号推文_转换版.html"
 | 图片无法显示 | 图片未内嵌为 base64 | 必须运行 Step 2 的 generate_copy_version.py |
 | 标题样式丢失 | 使用了 `<h3>` 等非 `<h2>` 标签 | 所有标题统一用 `<h2>`，通过 font-size 区分层级 |
 | 表格圆角消失 | `<table>` 上使用了 `border-radius` | 表格禁用 border-radius，改用 `<div>` 包裹实现圆角 |
+| 开头头像「他晓」显示在表格结构内 | brand-row 用了 `<table>` 布局（flex 失效后的错误替代） | 用 vertical-align:middle 内联方式实现图文并排（见 2.4 组件） |
+| 结尾微信二维码不显示 | `qrcode_wechat.png` 未复制到素材目录 | 按 3.3.1 素材检查清单逐项核对 7 个文件 |
 
 ### 3.4 封面图（重要：必须严格按此流程）
 
