@@ -77,20 +77,33 @@ W, H = 900, 383
 
 
 def find_font():
-    """查找可用的中文字体"""
+    """查找可用的中文字体,返回 (字体路径, ttc face index)。
+
+    注意:.ttc 集合默认 index=0 可能是繁体或细字重,需显式指定:
+    - Hiragino Sans GB.ttc:  0=W3(细) 2=W6(粗)
+    - STHeiti Medium.ttc:    0=Heiti TC(繁) 1=Heiti SC(简)
+    """
     candidates = [
-        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-        "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
-        "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
-        "/usr/share/fonts/truetype/noto/NotoSansSC-Regular.otf",
-        "/usr/share/fonts/truetype/noto/NotoSansSC-Regular.ttf",
-        "/System/Library/Fonts/Hiragino Sans GB.ttc",
-        "/System/Library/Fonts/PingFang.ttc",
-        "/Library/Fonts/Arial Unicode.ttf",
+        # macOS 字体(显式取简体粗字重,小尺寸下更清晰)
+        ("/System/Library/Fonts/PingFang.ttc", 0),
+        ("/System/Library/Fonts/Hiragino Sans GB.ttc", 2),   # W6 粗体
+        ("/System/Library/Fonts/STHeiti Medium.ttc", 1),     # Heiti SC 简体
+        ("/Library/Fonts/Arial Unicode.ttf", 0),
+        # Linux 字体
+        ("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc", 0),
+        ("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc", 0),
+        ("/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc", 0),
+        ("/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc", 0),
+        ("/usr/share/fonts/truetype/noto/NotoSansSC-Regular.otf", 0),
+        ("/usr/share/fonts/truetype/noto/NotoSansSC-Regular.ttf", 0),
     ]
-    for fp in candidates:
+    for fp, idx in candidates:
         if os.path.exists(fp):
-            return fp
+            try:
+                ImageFont.truetype(fp, 20, index=idx)
+                return fp, idx
+            except Exception:
+                continue
 
     # macOS fallback search
     if sys.platform == "darwin":
@@ -100,7 +113,7 @@ def find_font():
         )
         lines = result.stdout.strip().split("\n")
         if lines and lines[0]:
-            return lines[0]
+            return lines[0], 0
 
     # Linux fallback search
     result = subprocess.run(
@@ -109,10 +122,20 @@ def find_font():
     )
     lines = result.stdout.strip().split("\n")
     if lines and lines[0]:
-        return lines[0]
+        return lines[0], 0
 
     print("警告：未找到中文字体，使用默认字体（中文可能无法显示）")
     return None
+
+
+def load_font(size, font):
+    """按 (路径, ttc index) 加载字体,失败回退默认字体"""
+    if font:
+        try:
+            return ImageFont.truetype(font[0], size, index=font[1])
+        except Exception:
+            pass
+    return ImageFont.load_default()
 
 
 def lerp_color(c1, c2, t):
@@ -143,7 +166,7 @@ def draw_circle_alpha(img, cx, cy, radius, color, alpha_max=1.0, feather=0.6):
 def generate_cover(title, subtitle, tags, output_path, theme_name="blue", brand="他晓 · 科技前沿"):
     """生成封面图"""
     theme = THEMES.get(theme_name, THEMES["blue"])
-    font_path = find_font()
+    font = find_font()
 
     # 创建画布（RGB）
     img = Image.new("RGB", (W, H))
@@ -174,7 +197,7 @@ def generate_cover(title, subtitle, tags, output_path, theme_name="blue", brand=
 
     # 主标题
     title_size = 56
-    title_font = ImageFont.truetype(font_path, title_size) if font_path else ImageFont.load_default()
+    title_font = load_font(title_size, font)
     title_bbox = draw.textbbox((0, 0), title, font=title_font)
     title_w = title_bbox[2] - title_bbox[0]
     title_x = (W - title_w) // 2
@@ -189,7 +212,7 @@ def generate_cover(title, subtitle, tags, output_path, theme_name="blue", brand=
 
     # 副标题
     sub_size = 24
-    sub_font = ImageFont.truetype(font_path, sub_size) if font_path else ImageFont.load_default()
+    sub_font = load_font(sub_size, font)
     sub_bbox = draw.textbbox((0, 0), subtitle, font=sub_font)
     sub_w = sub_bbox[2] - sub_bbox[0]
     sub_x = (W - sub_w) // 2
@@ -199,7 +222,7 @@ def generate_cover(title, subtitle, tags, output_path, theme_name="blue", brand=
     # 标签行
     if tags:
         tag_size = 16
-        tag_font = ImageFont.truetype(font_path, tag_size) if font_path else ImageFont.load_default()
+        tag_font = load_font(tag_size, font)
         tag_bbox = draw.textbbox((0, 0), tags, font=tag_font)
         tag_w = tag_bbox[2] - tag_bbox[0]
         tag_x = (W - tag_w) // 2
@@ -208,7 +231,7 @@ def generate_cover(title, subtitle, tags, output_path, theme_name="blue", brand=
 
     # 底部品牌
     brand_size = 14
-    brand_font = ImageFont.truetype(font_path, brand_size) if font_path else ImageFont.load_default()
+    brand_font = load_font(brand_size, font)
     brand_bbox = draw.textbbox((0, 0), brand, font=brand_font)
     brand_w = brand_bbox[2] - brand_bbox[0]
     brand_x = (W - brand_w) // 2

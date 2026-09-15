@@ -27,27 +27,42 @@ W, H = 900, 383
 SS = 2                   # 超采样倍率:内部按 1800×766 绘制,缩小后锐利
 
 
-def find_font() -> str | None:
-    candidates = [
-        "/System/Library/Fonts/PingFang.ttc",
-        "/System/Library/Fonts/STHeiti Medium.ttc",
-        "/System/Library/Fonts/Hiragino Sans GB.ttc",
-        "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
-        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+def find_font(bold: bool = True) -> tuple[str, int] | None:
+    """返回 (字体路径, ttc face index)。优先简体粗字重,保证小尺寸下清晰。
+
+    注意:.ttc 集合默认 index=0 可能是繁体或细字重,需显式指定:
+    - Hiragino Sans GB.ttc:  0=W3(细) 2=W6(粗)
+    - STHeiti Medium.ttc:    0=Heiti TC(繁) 1=Heiti SC(简)
+    """
+    bold_candidates = [
+        ("/System/Library/Fonts/PingFang.ttc", 0),
+        ("/System/Library/Fonts/Hiragino Sans GB.ttc", 2),   # W6 粗体
+        ("/System/Library/Fonts/STHeiti Medium.ttc", 1),     # Heiti SC 简体
+        ("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc", 0),
     ]
-    for fp in candidates:
+    regular_candidates = [
+        ("/System/Library/Fonts/PingFang.ttc", 0),
+        ("/System/Library/Fonts/Hiragino Sans GB.ttc", 2),   # 小号字也用粗体更清晰
+        ("/System/Library/Fonts/STHeiti Medium.ttc", 1),
+        ("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc", 0),
+    ]
+    for fp, idx in (bold_candidates if bold else regular_candidates):
         if os.path.exists(fp):
-            return fp
+            try:
+                ImageFont.truetype(fp, 20, index=idx)
+                return fp, idx
+            except Exception:
+                continue
     result = subprocess.run(["find", "/System/Library/Fonts", "-name", "*PingFang*"],
                             capture_output=True, text=True)
     lines = result.stdout.strip().split("\n")
-    return lines[0] if lines and lines[0] else None
+    return (lines[0], 0) if lines and lines[0] else None
 
 
-def load_font(size: int, font_path: str | None) -> ImageFont.FreeTypeFont:
-    if font_path:
+def load_font(size: int, font: tuple[str, int] | None) -> ImageFont.FreeTypeFont:
+    if font:
         try:
-            return ImageFont.truetype(font_path, size)
+            return ImageFont.truetype(font[0], size, index=font[1])
         except Exception:
             pass
     return ImageFont.load_default()
@@ -105,26 +120,26 @@ def generate(output: str) -> None:
     w, h = W * SS, H * SS
     img = Image.new("RGB", (w, h), BG)
     draw = ImageDraw.Draw(img)
-    font_path = find_font()
+    bold_font = find_font(bold=True)
+    regular_font = find_font(bold=False)
 
     def S(v):
         return v * SS
 
     # 品牌行
-    brand_font = load_font(S(30), font_path)
+    brand_font = load_font(S(30), regular_font)
     draw.text((S(62), S(58)), "他晓", font=brand_font, fill=DIM)
 
-    # 主标题 AI速递(纯白粗体,加重 stroke)
-    title_font = load_font(S(118), font_path)
-    draw.text((S(56), S(122)), "AI速递", font=title_font, fill=WHITE,
-              stroke_width=S(3), stroke_fill=WHITE)
+    # 主标题 AI速递(纯白真粗体;不再用 stroke 伪加粗,避免边缘发虚)
+    title_font = load_font(S(118), bold_font)
+    draw.text((S(56), S(122)), "AI速递", font=title_font, fill=WHITE)
 
     # 红色小方块强调(替代橙色,呼应机器人双眼)
     draw.rectangle([S(62), S(268), S(140), S(278)], fill=EYE_RED)
     draw.rectangle([S(150), S(268), S(176), S(278)], fill="#3a3d44")
 
     # 副标题
-    sub_font = load_font(S(26), font_path)
+    sub_font = load_font(S(26), regular_font)
     draw.text((S(62), S(300)), "每日精选全球 AI 领域重要动态", font=sub_font, fill=DIM)
 
     # 右侧正面机器人

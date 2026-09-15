@@ -93,23 +93,33 @@ W, H = 900, 383
 
 
 def find_font():
-    """查找可用的中文字体（支持 macOS 和 Linux）"""
+    """查找可用的中文字体(支持 macOS 和 Linux),返回 (字体路径, ttc face index)。
+
+    注意:.ttc 集合默认 index=0 可能是繁体或细字重,需显式指定:
+    - Hiragino Sans GB.ttc:  0=W3(细) 2=W6(粗)
+    - STHeiti Medium.ttc:    0=Heiti TC(繁) 1=Heiti SC(简)
+    """
     candidates = [
-        # macOS 字体
-        "/System/Library/Fonts/PingFang.ttc",
-        "/System/Library/Fonts/STHeiti Medium.ttc",
-        "/System/Library/Fonts/Hiragino Sans GB.ttc",
-        "/Library/Fonts/Arial Unicode.ttf",
+        # macOS 字体(显式取简体粗字重,小尺寸下更清晰)
+        ("/System/Library/Fonts/PingFang.ttc", 0),
+        ("/System/Library/Fonts/Hiragino Sans GB.ttc", 2),   # W6 粗体
+        ("/System/Library/Fonts/STHeiti Medium.ttc", 1),     # Heiti SC 简体
+        ("/Library/Fonts/Arial Unicode.ttf", 0),
         # Linux 字体
-        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-        "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
-        "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
-        "/usr/share/fonts/truetype/noto/NotoSansSC-Regular.otf",
-        "/usr/share/fonts/truetype/noto/NotoSansSC-Regular.ttf",
+        ("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc", 0),
+        ("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc", 0),
+        ("/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc", 0),
+        ("/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc", 0),
+        ("/usr/share/fonts/truetype/noto/NotoSansSC-Regular.otf", 0),
+        ("/usr/share/fonts/truetype/noto/NotoSansSC-Regular.ttf", 0),
     ]
-    for fp in candidates:
+    for fp, idx in candidates:
         if os.path.exists(fp):
-            return fp
+            try:
+                ImageFont.truetype(fp, 20, index=idx)
+                return fp, idx
+            except Exception:
+                continue
 
     # macOS 兜底搜索
     result = subprocess.run(
@@ -118,7 +128,7 @@ def find_font():
     )
     lines = result.stdout.strip().split("\n")
     if lines and lines[0]:
-        return lines[0]
+        return lines[0], 0
 
     # Linux 兜底搜索
     result = subprocess.run(
@@ -127,16 +137,26 @@ def find_font():
     )
     lines = result.stdout.strip().split("\n")
     if lines and lines[0]:
-        return lines[0]
+        return lines[0], 0
 
     print("警告：未找到中文字体，使用默认字体（中文可能无法显示）")
     return None
 
 
+def load_font(size, font):
+    """按 (路径, ttc index) 加载字体,失败回退默认字体"""
+    if font:
+        try:
+            return ImageFont.truetype(font[0], size, index=font[1])
+        except Exception:
+            pass
+    return ImageFont.load_default()
+
+
 def generate_cover(title, subtitle, tags, output_path, theme_name="warm", brand="他晓 · AI观察", date_str=""):
     """生成封面图（暖色极简编辑卡片风格）"""
     theme = THEMES.get(theme_name, THEMES["warm"])
-    font_path = find_font()
+    font = find_font()
 
     # 创建画布（RGB），纯色背景
     img = Image.new("RGB", (W, H), theme["bg"])
@@ -156,7 +176,7 @@ def generate_cover(title, subtitle, tags, output_path, theme_name="warm", brand=
     # --- 3.1 顶部信息栏（品牌 + 日期） ---
     info_y = 36
     info_font_size = 13
-    info_font = ImageFont.truetype(font_path, info_font_size) if font_path else ImageFont.load_default()
+    info_font = load_font(info_font_size, font)
 
     # 品牌圆点 + 品牌名
     dot_r = 4
@@ -180,7 +200,7 @@ def generate_cover(title, subtitle, tags, output_path, theme_name="warm", brand=
 
     # --- 3.2 主标题 ---
     title_size = 52
-    title_font = ImageFont.truetype(font_path, title_size) if font_path else ImageFont.load_default()
+    title_font = load_font(title_size, font)
     title_y = 100
     draw.text((content_x, title_y), title, fill=theme["text_dark"], font=title_font)
 
@@ -193,14 +213,14 @@ def generate_cover(title, subtitle, tags, output_path, theme_name="warm", brand=
 
     # --- 3.4 副标题 ---
     sub_size = 22
-    sub_font = ImageFont.truetype(font_path, sub_size) if font_path else ImageFont.load_default()
+    sub_font = load_font(sub_size, font)
     sub_y = line_y + 22
     draw.text((content_x, sub_y), subtitle, fill=theme["text_mid"], font=sub_font)
 
     # --- 3.5 标签行 ---
     if tags:
         tag_size = 15
-        tag_font = ImageFont.truetype(font_path, tag_size) if font_path else ImageFont.load_default()
+        tag_font = load_font(tag_size, font)
         tag_y = sub_y + sub_size + 16
         draw.text((content_x, tag_y), tags, fill=theme["text_light"], font=tag_font)
 
