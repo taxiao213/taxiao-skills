@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!--
+  抖音竖版封面 V2（1080×1440）· 实拍照片全幅打底 + 大字压字 + 白底胶囊（0930 横版版式的竖屏化，防「截屏当封面」flag）
+  版式原理：实拍照片放大（width 118%）上移，顶部/左侧渐变保证文字可读；
+    文字一律带白底胶囊/投影，无任何终端元素（网格、窗口栏、圆点、等宽代码感）。
+  用法：复制到产出目录，替换 {{TOKEN}}；{{AVATAR_PATH}} 为实拍照片相对路径；
+        照片取景调 .photo img 的 object-position（人物偏下时填 50% 30%）。
+-->
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1440px; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+    position: relative;
+    overflow: hidden;
+    background: #101410;
+    color: #FFFFFF;
+  }
+  .mono { font-family: "SF Mono", Menlo, monospace; }
+
+  /* 实拍照片全幅打底：width 118% 上移，上半留文字区 */
+  .photo { position: absolute; inset: 0; z-index: 1; }
+  .photo img {
+    width: 118%; height: 100%; display: block;
+    margin-left: -9%;
+    object-fit: cover; object-position: {{PHOTO_POSITION}};
+  }
+  /* 顶部大渐变 + 底部渐变，保证文字可读 */
+  .scrim { position: absolute; inset: 0; z-index: 1;
+    background:
+      linear-gradient(180deg, rgba(10,14,11,.82) 0%, rgba(10,14,11,.45) 34%, rgba(10,14,11,0) 58%),
+      linear-gradient(0deg, rgba(10,14,11,.55) 0%, rgba(10,14,11,0) 26%);
+  }
+
+  .content { position: relative; z-index: 2; height: 100%; padding: 60px 60px 0; display: flex; flex-direction: column; }
+  .kicker {
+    align-self: flex-start;
+    background: rgba(255,255,255,.94); color: #131A15;
+    padding: 10px 24px; border-radius: 999px;
+    font-size: 25px; font-weight: 700; letter-spacing: 3px;
+    margin-bottom: 32px;
+  }
+  h1 { font-size: {{TITLE_SIZE}}px; line-height: 1.22; font-weight: 800; letter-spacing: 2px;
+       text-shadow: 0 4px 30px rgba(0,0,0,.6); }
+  h1 .accent { color: {{ACCENT}}; }
+  .hook {
+    margin-top: 36px; align-self: flex-start;
+    background: rgba(255,255,255,.94); color: #131A15;
+    padding: 13px 26px; border-radius: 999px;
+    font-size: 27px; font-weight: 600;
+  }
+
+  /* 底脚加深色胶囊底，防与照片浅色区撞色 */
+  .footer {
+    position: absolute; z-index: 2; left: 60px; bottom: 44px;
+    background: rgba(10,14,11,.55);
+    border-radius: 18px;
+    padding: 16px 26px;
+  }
+  .footer .big { font-size: 38px; font-weight: 800; letter-spacing: 2px; }
+  .footer .sub { margin-top: 6px; font-size: 22px; color: rgba(255,255,255,.88); }
+</style>
+</head>
+<body>
+  <div class="photo"><img src="{{AVATAR_PATH}}" alt=""></div>
+  <div class="scrim"></div>
+
+  <div class="content">
+    <div class="kicker">{{KICKER}}</div>
+    <h1>{{TITLE_HTML}}</h1>
+    <div class="hook">{{HOOK}}</div>
+  </div>
+
+  <div class="footer">
+    <div class="big">{{FOOTER_BIG}}</div>
+    <div class="sub">{{FOOTER_SUB}}</div>
+  </div>
+</body>
+</html>

@@ -236,7 +236,8 @@ Read assets/template.html
 | `qrcode_gzh.jpg` | 结尾公众号二维码 | ✅ |
 | `qrcode_xcx.jpg` | 结尾小程序二维码 | ✅ |
 | `qrcode_wechat.png` | 结尾社群微信二维码 | ✅ |
-| `cover.png` | 微信封面缩略图（generate_cover.py 生成） | ✅ |
+| `cover.png` | 微信封面缩略图①：Pillow 浅色四主题 | ✅ |
+| `cover-dev.png` | 微信封面缩略图②：深色开发者风（与①二选一上传） | ✅ |
 
 > ⚠️ 复制完成后执行 `ls {文章主题}_公众号推文_assets/` 核对 7 个文件齐全，再进入下一步。漏复制文件会导致图片在微信中无法显示。
 
@@ -352,6 +353,26 @@ python3 taxiao-wechat-v3/assets/generate_cover.py \
 | `purple` | 深度分析/行业报告类 | 深空紫 #6A1B9A |
 | `green` | 生态/开源/教育类 | 清新绿 #2E7D32 |
 
+**深色开发者风（与 pip-cover 视频封面同款视觉，2026-10-11 新增）**：
+
+**规则：每期同时生成两个封面，发布时二选一上传 thumb**：
+1. `cover.png` — Pillow 浅色四主题（上方命令）
+2. `cover-dev.png` — 深色开发者风 HTML 模板（下方命令），与 pip-cover 视频封面同款视觉
+
+```bash
+# 1. 复制模板到本期 cards/ 并填 {{TOKEN}}（KICKER / TITLE_HTML 用 <br> 断行 / SUBTITLE / GHOST / BRAND）
+cp taxiao-wechat-v3/assets/cover-dev-template.html <期目录>/cards/cover-wechat-dev.html
+# 2. render.sh 出图（绝对路径；900×383）
+<repo>/fresh-cover/scripts/render.sh "$PWD/<期目录>/cards/cover-wechat-dev.html" \
+  "$PWD/<期目录>/<主题>_公众号推文_assets/cover-dev.png" 900 383
+```
+
+- 版式：#0B120D 深绿黑底 + 淡绿网格 + 顶部 glow（pip-cover 同源色板），**无人物头像**
+- 信息层级只有 4 层：kicker 描边胶囊 → 主标题（≤2 行，accent 词绿色）→ 副标题 → 底部署名「他晓 Taxiao」
+- 主标题压字注意：右侧幽灵装饰字（.ghost）放右下、避开标题区；换标题后需 Read 校验无重叠
+- 两版封面都不嵌正文 HTML，换封面/换版本**无需**重跑 3.3.2 两步流程
+- 仍然禁止 AI 生图；两个封面都是「脚本/模板渲染」，AI 图一律不准上封面
+
 **封面图设计规范**：
 - 浅色渐变背景（135°）
 - 3-4 个装饰圆形（部分溢出画面边缘，营造空间感）
@@ -378,7 +399,8 @@ python3 taxiao-wechat-v3/assets/generate_cover.py \
 | `qrcode_wechat.png` | 微信二维码（社群邀请） |
 | `header_deco.png` | 开头装饰图 |
 | `footer_deco.png` | 结尾装饰图 |
-| `generate_cover.py` | 封面图生成脚本（Pillow，见 3.4 节） |
+| `generate_cover.py` | 封面图生成脚本（Pillow，浅色四主题，见 3.4 节） |
+| `cover-dev-template.html` | 深色开发者风公众号封面模板（900×383，HTML + render.sh，见 3.4 节） |
 | `template.html` | 完整 HTML 模板（全内联样式） |
 
 ### 4.2 外部依赖脚本（wechat-draft-publish/）

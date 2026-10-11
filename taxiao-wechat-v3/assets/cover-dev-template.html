@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!--
+  公众号封面 · 深色开发者风模板（900×383 = 微信文章封面比例 2.35:1）
+  视觉与 pip-cover 视频封面同源：深绿黑底 + 淡绿网格 + 顶部 glow + 白字绿 accent。
+  无人物头像；正文信息层级只有 4 层：kicker 胶囊 → 主标题（≤2 行）→ 副标题 → 底部署名。
+
+  用法：复制到产出目录（建议 <期目录>/cards/cover-wechat-dev.html），替换 {{TOKEN}}，再渲染：
+    <repo>/fresh-cover/scripts/render.sh "$PWD/<产出目录>/cards/cover-wechat-dev.html" \
+      "$PWD/<期目录>/<主题>_公众号推文_assets/cover.png" 900 383
+  封面图不嵌正文 HTML（公众号 thumb 单独上传），无需重跑推文两步转换流程。
+
+  可调整：
+  - 配色只改 :root（与 pip-cover 同一套色板）
+  - 主标题两行结构：{{TITLE_HTML}} 里用 <br> 断行，accent 词包 <span class="accent">
+  - 右侧幽灵字 {{GHOST}}：整段删除即无装饰
+-->
+<style>
+  :root {
+    --bg: #0B120D;            /* 深绿黑底（pip-cover 同源） */
+    --text: #F2F7F3;
+    --muted: #9DB3A4;
+    --dim: #7E9384;
+    --accent: #4ADE80;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 900px; height: 383px; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    position: relative;
+    overflow: hidden;
+  }
+  .mono { font-family: "SF Mono", Menlo, monospace; }
+
+  /* 顶部绿色 glow（pip-cover 同款，按横幅比例压扁） */
+  .glow {
+    position: absolute; top: -170px; left: 34%; transform: translateX(-50%);
+    width: 620px; height: 340px; border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(74,222,128,.15), transparent);
+  }
+  /* 淡绿网格（画布小，间距 45px） */
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(74,222,128,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(74,222,128,.05) 1px, transparent 1px);
+    background-size: 45px 45px;
+  }
+
+  /* 右下幽灵装饰字（低透明 mono，避开标题区；如压字改小或删除本段） */
+  .ghost {
+    position: absolute; z-index: 1;
+    right: 36px; bottom: 22px;
+    font-size: 54px; font-weight: 800; letter-spacing: -1px;
+    color: rgba(74,222,128,.08);
+    white-space: nowrap;
+  }
+
+  .wrap { position: relative; z-index: 2; height: 100%; padding: 34px 48px; display: flex; flex-direction: column; justify-content: center; }
+  .kicker {
+    display: inline-flex; align-self: flex-start;
+    border: 1.5px solid rgba(74,222,128,.5);
+    color: var(--accent);
+    padding: 5px 16px; border-radius: 999px;
+    font-size: 15px; letter-spacing: 3px; font-weight: 600;
+    margin-bottom: 18px;
+  }
+  h1 { font-size: 52px; line-height: 1.2; font-weight: 800; letter-spacing: 1px;
+       text-shadow: 0 3px 20px rgba(0,0,0,.5); }
+  h1 .accent { color: var(--accent); }
+  .sub { margin-top: 15px; font-size: 18px; color: var(--muted); letter-spacing: 1px; }
+
+  .brand { position: absolute; z-index: 2; left: 48px; bottom: 16px;
+           font-size: 12px; color: var(--dim); letter-spacing: 2px; }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="grid"></div>
+  <div class="ghost mono">{{GHOST}}</div>
+
+  <div class="wrap">
+    <div class="kicker">{{KICKER}}</div>
+    <h1>{{TITLE_HTML}}</h1>
+    <div class="sub">{{SUBTITLE}}</div>
+  </div>
+
+  <div class="brand">{{BRAND}}</div>
+</body>
+</html>

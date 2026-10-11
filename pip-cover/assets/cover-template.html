@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!--
+  画中画头像封面模板（深色开发者风格）
+  用法：复制本文件到产出目录，替换下方 {{TOKEN}} 占位内容，再用 scripts/render.sh 出图。
+  可调整：
+  - :root 里的配色变量（换主题色只改这里）
+  - 坑位卡片（.hook）数量：复制/删除即可，建议 2-4 条
+  - 头像裁剪：.pip img 的 width 百分比（放大倍数）和 object-position（取景位置）
+  - 画布尺寸：html,body 的 width/height 必须与 render.sh 的宽高参数一致
+-->
+<style>
+  :root {
+    --bg: #0B120D;            /* 页面底色 */
+    --surface: #131C15;       /* 卡片底色 */
+    --text: #E9F2EB;          /* 主文字 */
+    --muted: #9DB3A4;         /* 次要文字 */
+    --dim: #7E9384;           /* 弱化文字 */
+    --accent: #4ADE80;        /* 主题强调色 */
+    --danger: #F87171;        /* 否定/警告色 */
+    --line: rgba(233,242,235,.10);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: {{WIDTH}}px; height: {{HEIGHT}}px; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    position: relative;
+    overflow-x: clip;   /* 注意：不要用 overflow:hidden，否则浏览器预览时无法滚动 */
+  }
+  .mono { font-family: "SF Mono", Menlo, monospace; }
+
+  .glow {
+    position: absolute; top: -300px; left: 50%; transform: translateX(-50%);
+    width: 1200px; height: 900px; border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(74,222,128,.16), transparent);
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(74,222,128,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(74,222,128,.05) 1px, transparent 1px);
+    background-size: 90px 90px;
+  }
+
+  .wrap { position: relative; padding: 96px 80px; height: 100%; display: flex; flex-direction: column; }
+
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 30px; color: var(--dim);
+  }
+  .topbar .dot { color: var(--accent); }
+
+  .kicker {
+    margin-top: 150px;
+    display: inline-flex; align-items: center;
+    align-self: flex-start;
+    border: 2px solid rgba(74,222,128,.45);
+    color: var(--accent);
+    padding: 14px 28px; border-radius: 999px;
+    font-size: 32px; letter-spacing: 4px; font-weight: 600;
+  }
+
+  h1 { margin-top: 56px; font-size: 148px; line-height: 1.18; font-weight: 800; letter-spacing: 2px; }
+  h1 .neg { color: var(--danger); }
+  h1 .accent { color: var(--accent); }
+
+  /* 右上角印章，可整段删除 */
+  .stamp {
+    position: absolute; top: 396px; right: 58px;
+    transform: rotate(10deg);
+    border: 6px solid var(--danger); color: var(--danger);
+    font-size: 50px; font-weight: 800; letter-spacing: 8px;
+    padding: 16px 30px; border-radius: 16px;
+    opacity: .92;
+  }
+
+  /* 要点卡片：两行结构（第一行原因/白色，第二行结果/红色），卡片高度统一 */
+  .hooks { margin-top: 96px; display: flex; flex-direction: column; gap: 34px; width: 590px; }
+  .hook {
+    display: flex; align-items: center; gap: 26px;
+    background: var(--surface);
+    border: 1.5px solid var(--line);
+    border-radius: 26px;
+    padding: 30px 40px;
+    min-height: 152px;
+    font-size: 37px; font-weight: 600;
+    line-height: 1.5;
+  }
+  .hook .no { color: var(--accent); font-size: 30px; min-width: 100px; }
+  .hook .arrow { color: var(--danger); font-weight: 800; }
+
+  /* 头像画中画窗口 */
+  .pip {
+    position: absolute; right: 76px; top: 950px;
+    width: 330px;
+    border-radius: 26px; overflow: hidden;
+    background: var(--surface);
+    border: 2.5px solid rgba(74,222,128,.55);
+    box-shadow: 0 34px 90px rgba(0,0,0,.6);
+    transform: rotate(3deg);
+  }
+  .pip .pip-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 20px;
+    background: rgba(233,242,235,.06);
+    font-size: 16px; color: var(--muted);
+    white-space: nowrap;   /* 长标签不换行；装不下就减小 font-size */
+  }
+  .pip .pip-head .dots { display: flex; gap: 9px; }
+  .pip .pip-head .dots i { width: 17px; height: 17px; border-radius: 50%; display: block; }
+  .pip .pip-head .dots i:nth-child(1) { background: #F87171; }
+  .pip .pip-head .dots i:nth-child(2) { background: #FBBF24; }
+  .pip .pip-head .dots i:nth-child(3) { background: #4ADE80; }
+  /* 头像放大裁剪：用 width 118% + 负 margin 实现，不要用 transform: scale（会盖住标题栏/底栏） */
+  .pip img {
+    width: 118%; height: 360px; display: block;
+    margin-left: -9%;
+    object-fit: cover; object-position: center 15%;
+  }
+  .pip .pip-foot {
+    padding: 14px 22px;
+    font-size: 24px; color: var(--accent); font-weight: 700;
+    background: rgba(74,222,128,.07);
+  }
+
+  .spacer { flex: 1; }
+
+  .footer {
+    border-top: 1.5px solid rgba(233,242,235,.14);
+    padding-top: 44px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .footer .big { font-size: 52px; font-weight: 800; letter-spacing: 2px; }
+  .footer .big em { color: var(--accent); font-style: normal; }
+  .footer .sub { margin-top: 14px; font-size: 30px; color: var(--dim); }
+  .footer .app { font-size: 30px; color: var(--dim); text-align: right; line-height: 1.7; }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="grid"></div>
+  <div class="wrap">
+    <div class="topbar mono">
+      <span><span class="dot">●</span> {{TOPBAR_LEFT}}</span>
+      <span>{{TOPBAR_RIGHT}}</span>
+    </div>
+
+    <div class="kicker">{{KICKER}}</div>
+
+    <h1>{{TITLE_HTML}}</h1>
+
+    <div class="stamp">{{STAMP}}</div>
+
+    <div class="hooks">
+      <div class="hook"><span class="no mono">01</span><span>{{HOOK1_LINE1}}<br><span class="arrow">{{HOOK1_LINE2}}</span></span></div>
+      <div class="hook"><span class="no mono">02</span><span>{{HOOK2_LINE1}}<br><span class="arrow">{{HOOK2_LINE2}}</span></span></div>
+      <div class="hook"><span class="no mono">03</span><span>{{HOOK3_LINE1}}<br><span class="arrow">{{HOOK3_LINE2}}</span></span></div>
+    </div>
+
+    <div class="pip">
+      <div class="pip-head mono">
+        <span class="dots"><i></i><i></i><i></i></span>
+        {{PIP_LABEL}}
+      </div>
+      <img src="{{AVATAR_PATH}}" alt="avatar">
+      <div class="pip-foot">{{PIP_FOOT}}</div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="footer">
+      <div>
+        <div class="big">{{FOOTER_BIG}}</div>
+        <div class="sub">{{FOOTER_SUB}}</div>
+      </div>
+      <div class="app mono">{{FOOTER_RIGHT}}</div>
+    </div>
+  </div>
+</body>
+</html>

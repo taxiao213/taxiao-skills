@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!--
+  抖音竖版封面 V3（1080×1440）· 人物放大首层 + 文字后置（1011 版式，防「截屏当封面」flag）
+  版式原理：同一张实拍照片两层用法——
+    底层 = blur+brightness(.42) 暗化版，做文字底；
+    首层 = 清晰人物 cover 裁切放大（人物占画面下半 ~69%），mask-image 顶缘羽化融入背景；
+    hook 胶囊尾部探进羽化带前段（alpha 0~30% 区）→ 文字被人物「压住」且仍可读。
+  用法：复制到产出目录，替换 {{TOKEN}}；{{AVATAR_PATH}} 为实拍照片相对路径；
+        人物取景调 .person img 的 object-position（默认 50% 20%）。
+  注意：羽化带（height 前 10%）内文字会被逐级盖住，hook 位置随标题行数变化时需重新核算。
+-->
+<style>
+  :root {
+    --ink: #0B120D;
+    --text: #F2F7F3;
+    --accent: #4ADE80;
+    --dim: #B9C8BD;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1440px; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+    position: relative;
+    overflow: hidden;
+    background: var(--ink);
+    color: var(--text);
+  }
+  .mono { font-family: "SF Mono", Menlo, monospace; }
+
+  /* 底层：同一张照片的模糊暗化版 */
+  .bg { position: absolute; inset: -40px; z-index: 1; }
+  .bg img {
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: 50% 40%;
+    filter: blur(24px) brightness(.42) saturate(.85);
+  }
+  .scrim {
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(180deg,
+      rgba(8,14,10,.82) 0%, rgba(8,14,10,.40) 38%, rgba(8,14,10,0) 60%);
+  }
+
+  .content {
+    position: relative; z-index: 2;
+    padding: 44px 60px 0;
+    display: flex; flex-direction: column;
+  }
+  .kicker {
+    display: inline-flex; align-self: flex-start;
+    border: 2px solid rgba(74,222,128,.5);
+    color: var(--accent);
+    padding: 10px 24px; border-radius: 999px;
+    font-size: 25px; letter-spacing: 4px; font-weight: 600;
+    margin-bottom: 18px;
+  }
+  h1 { font-size: 74px; line-height: 1.2; font-weight: 800; letter-spacing: 2px;
+       text-shadow: 0 4px 26px rgba(0,0,0,.55); }
+  h1 .accent { color: var(--accent); }
+  .hook {
+    margin-top: 26px;
+    display: inline-flex; align-self: flex-start; align-items: center;
+    background: rgba(74,222,128,.13);
+    border: 1.5px solid rgba(74,222,128,.5);
+    color: #DFFBE8;
+    padding: 13px 26px; border-radius: 999px;
+    font-size: 28px; font-weight: 600;
+  }
+  .hook .t { color: var(--accent); margin-right: 13px; }
+
+  /* 人物层：首层放大（头部占比拉高），顶缘羽化融入背景 */
+  .person {
+    position: absolute; z-index: 3;
+    left: 0; right: 0; bottom: 0;
+    height: 1000px;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 10%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 10%);
+  }
+  .person img {
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: 50% 20%;
+  }
+
+  /* 底脚压白衣服场景：加深色胶囊底保证可读 */
+  .footer {
+    position: absolute; z-index: 4;
+    left: 60px; bottom: 44px;
+    background: rgba(8,14,10,.58);
+    border-radius: 18px;
+    padding: 16px 26px;
+  }
+  .footer .big { font-size: 38px; font-weight: 800; letter-spacing: 2px; }
+  .footer .sub { margin-top: 6px; font-size: 22px; color: var(--dim); }
+</style>
+</head>
+<body>
+  <div class="bg"><img src="{{AVATAR_PATH}}" alt=""></div>
+  <div class="scrim"></div>
+
+  <div class="content">
+    <div class="kicker">{{KICKER}}</div>
+    <h1>{{TITLE_HTML}}</h1>
+    <div class="hook">{{HOOK}}</div>
+  </div>
+
+  <div class="person"><img src="{{AVATAR_PATH}}" alt=""></div>
+
+  <div class="footer">
+    <div class="big">{{FOOTER_BIG}}</div>
+    <div class="sub">{{FOOTER_SUB}}</div>
+  </div>
+</body>
+</html>

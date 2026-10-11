@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<!--
+  抖音横版封面 V3（1440×1080）· 人物放大首层 + 文字后置（1011 版式，防「截屏当封面」flag）
+  版式原理：同一张实拍照片两层用法——
+    底层 = blur+brightness(.42) 暗化版，做文字底；
+    首层 = 清晰人物 cover 裁切放大（头部约占画面高 70%），mask-image 左缘羽化探进文字区；
+    文字层在人物之下（z-index 2 < 3），被人物 silhouette 压住 → 「文字在人物后面」。
+  用法：复制到产出目录，替换 {{TOKEN}}；{{AVATAR_PATH}} 为实拍照片相对路径；
+        人物取景调 .person img 的 object-position（默认 50% 30%，头肩特写）。
+-->
+<style>
+  :root {
+    --ink: #0B120D;
+    --text: #F2F7F3;
+    --accent: #4ADE80;
+    --dim: #B9C8BD;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1440px; height: 1080px; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+    position: relative;
+    overflow: hidden;
+    background: var(--ink);
+    color: var(--text);
+  }
+  .mono { font-family: "SF Mono", Menlo, monospace; }
+
+  /* 底层：同一张照片的模糊暗化版，作文字底 */
+  .bg { position: absolute; inset: -40px; z-index: 1; }
+  .bg img {
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: 50% 40%;
+    filter: blur(24px) brightness(.42) saturate(.85);
+  }
+  .scrim {
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(90deg,
+      rgba(8,14,10,.78) 0%, rgba(8,14,10,.42) 44%, rgba(8,14,10,0) 72%);
+  }
+
+  /* 文字层（将被人物压住 → 文字在人物后面） */
+  .ghost {
+    position: absolute; z-index: 2;
+    right: 30px; bottom: -30px;
+    font-size: 300px; font-weight: 800; letter-spacing: -6px;
+    color: rgba(242,247,243,.07);
+    font-family: "SF Mono", Menlo, monospace;
+    white-space: nowrap;
+  }
+  .content {
+    position: relative; z-index: 2;
+    height: 100%;
+    padding: 64px 72px;
+    display: flex; flex-direction: column; justify-content: center;
+    width: 780px;
+  }
+  .kicker {
+    display: inline-flex; align-self: flex-start;
+    border: 2px solid rgba(74,222,128,.5);
+    color: var(--accent);
+    padding: 10px 24px; border-radius: 999px;
+    font-size: 25px; letter-spacing: 4px; font-weight: 600;
+    margin-bottom: 40px;
+  }
+  h1 { font-size: 84px; line-height: 1.24; font-weight: 800; letter-spacing: 2px;
+       text-shadow: 0 4px 26px rgba(0,0,0,.55); }
+  h1 .accent { color: var(--accent); }
+  .hook {
+    margin-top: 42px;
+    display: inline-flex; align-self: flex-start; align-items: center;
+    background: rgba(74,222,128,.13);
+    border: 1.5px solid rgba(74,222,128,.5);
+    color: #DFFBE8;
+    padding: 14px 28px; border-radius: 999px;
+    font-size: 29px; font-weight: 600;
+  }
+  .hook .t { color: var(--accent); margin-right: 14px; }
+
+  /* 人物层：首层放大，左缘羽化探进文字区
+     羽化带（width 前 ~30%）内文字会被逐级盖住：羽化带前 1/3 可读、后 2/3 全盖，
+     想让哪行文字「被压住」，就把该行尾缘伸进羽化带前段 */
+  .person {
+    position: absolute; z-index: 3;
+    right: 0; top: -60px;
+    width: 860px; height: 1200px;
+    -webkit-mask-image: linear-gradient(to left, #000 68%, transparent 98%);
+    mask-image: linear-gradient(to left, #000 68%, transparent 98%);
+    filter: drop-shadow(-28px 18px 44px rgba(0,0,0,.5));
+  }
+  .person img {
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: 50% 30%;
+  }
+
+  .footer {
+    position: absolute; z-index: 4;
+    left: 72px; bottom: 48px;
+  }
+  .footer .big { font-size: 42px; font-weight: 800; letter-spacing: 2px;
+                 text-shadow: 0 3px 18px rgba(0,0,0,.6); }
+  .footer .sub { margin-top: 8px; font-size: 24px; color: var(--dim);
+                 text-shadow: 0 3px 14px rgba(0,0,0,.6); }
+</style>
+</head>
+<body>
+  <div class="bg"><img src="{{AVATAR_PATH}}" alt=""></div>
+  <div class="scrim"></div>
+
+  <div class="ghost">{{GHOST}}</div>
+
+  <div class="content">
+    <div class="kicker">{{KICKER}}</div>
+    <h1>{{TITLE_HTML}}</h1>
+    <div class="hook">{{HOOK}}</div>
+  </div>
+
+  <div class="person"><img src="{{AVATAR_PATH}}" alt=""></div>
+
+  <div class="footer">
+    <div class="big">{{FOOTER_BIG}}</div>
+    <div class="sub">{{FOOTER_SUB}}</div>
+  </div>
+</body>
+</html>
